@@ -1,0 +1,174 @@
+---
+title: "Mutation-Selection Balance"
+author: "Kevin Huang"
+date: "1/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(learnPopGen)
+```
+*Adapted from Chapter 3 of "Population Genetics" by Gillespie (2004), with particular emphasis on 3.4*
+
+# Background
+
+Mutation-Selection Balance refers to a scenario in which the rate of introduction of mutations in a population is equal to the rate of loss due to selection. 
+
+Most genetic mutations are either deleterious or neutral, and very rarely beneficial. This inflow of deleterious mutations is countered by selection against the mutations. Balance is achieved by reaching an equilibrium between the rates at which mutations are created and selected against. 
+
+
+## Mutation rate
+
+Let $A_2$ be the deleterious allele. Its frequency is increased by mutation of $A_1$ to $A_2$, and decreased by negative selection against it. Selection is assumed to be sufficiently strong, so mutation from $A_1$ to $A_2$ is the most important effect of mutation. Note that the inverse ($A_2$ to $A_1$) occurs as well but is negligible. 
+
+Thus, the mutation rate of $A_1$ to $A_2$ can be represented as $u$, with the following notation: 
+
+$$ A_1 \xrightarrow{\text{u}} A_2 $$
+$u$ can otherwise be understood as the probability that an $A_1$ allele mutates to an $A_2$ in a gamete.
+
+## Change due to mutation
+
+Following this, we find that $p' = p(1-u)$, where $p$ is the frequency of the $A_1$ allele in a generation, and $p'$ is the frequency of the $A_1$ allele in the subsequent generation.
+
+Thus the change of frequency in one generation is:
+$$\Delta_u p = -up$$
+This can be rewritten in terms of the frequency of the deleterious allele, $q$:
+$$\Delta_u p = -u + qu$$
+If selection against the deleterious allele is very strong, $q \approx 0$, giving us:
+
+$$\Delta_u p \approx -u$$
+## Change due to selection
+
+The change in the frequency of $p$ due to selection alone when $q \approx 0$ is^:
+$$\Delta_s p = \frac{pqs[ph+q(1-h)]}{1-2pqhs-q^2s}$$
+$$\Delta_s p \approx qhs$$
+It follows that $p \approx 1$ and $\bar{w} \approx 1$ in this scenario.
+
+^ *I'm unsure of how this is actually derived?*
+
+## Balance
+
+Balance is achieved when these two changes are at equilibrium. Or:
+$$0 = \Delta_s p + \Delta_u p$$
+$$0 = qhs -u$$
+Rearranging, we get:
+$$\hat{q} = u/hs$$
+So, the equilibrium frequency of the deleterious allele is derived from the mutation rate of the allele divided by the selection against the allele in heterozygotes. Rare alleles are mostly found in heterozygotes, so our result makes some intuitive sense.
+
+# mutation.selection from learnPopGen
+
+The R package learnPopGen has a specific function dedicated to performing numerical analysis of mutation-selection balance. We will assume a mutation frequency of 0.001 and initial frequency of the $A_1$ allele to be 0.9.
+
+## Complete Dominance
+
+Complete dominance is the rarest scenario and unlikely to occur in naturally occurring alleles. There are two scenarios for complete dominance; when allele $A_1$ is completely dominant, and when allele $A_2$ is completely dominant. 
+
+When allele $A_1$ is completely dominant, the heterozygote a allele has zero fitness, as does the homozygote aa. We see that the frequency of the $A_2$ allele goes to extinction.
+
+```{r}
+#complete dominance 1
+mutation.selection(p0=0.9, w=c(1,0), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+When allele $A_2$ is completely dominant, the heterozygote A has high fitness, as does the homozygote aa. We see the inverse of the previous graph, with the frequency of the $A_2$ allele going towards fixation.
+
+```{r}
+#complete dominance 2
+mutation.selection(p0=0.9, w=c(2,2), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+## Incomplete Dominance
+
+In the case of incomplete dominance, the fitness of the heterozygote allele is in between being fully fit, and completely unfit, reliant on the selection coefficient. 
+
+For a negative selection coefficient (i.e, $A_2A_2$ has an advantage over $A_1A_1$), the homozygote aa alleles will be more fit, and the heterozygote a allele will be slightly more fit. We see fixation at a slower rate than the case for complete dominance.
+
+```{r}
+#incomplete dominance 1
+mutation.selection(p0=0.9, w=c(1.05,1.1), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+For a positive selection coefficient (i.e, $A_1A_1 has an advantage over $A_2A_2$), the homozygote aa alleles will be less fit, and the heterozygote a allele will be slightly less fit. We see extinction at a slower rate than the case for complete dominance. 
+
+
+```{r}
+#incomplete dominance 2
+mutation.selection(p0=0.9, w=c(0.95,0.9), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+## Overdominance
+
+In the case of overdominance, the heterozygote has higher fitness than than homozygous individuals. 
+
+When the homozygous aa genotype has a higher fitness than the AA genotype, but a lower fitness than the Aa genotype, a balance in allelic frequency is achieved...
+
+
+```{r}
+#overdominance 1
+mutation.selection(p0=0.9, w=c(1.5,1.1), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+,,,of which the inverse (AA has higher fitness than aa but lower than Aa) is true as well.
+
+
+```{r}
+#overdominance 2
+mutation.selection(p0=0.9, w=c(1.5,.9), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+## Underdominance
+
+The case of underdominance is the opposite of overdominance. The heterozygote is selected against, while the homozygotes have higher fitness.
+
+When the aa genotype has higher fitness than the AA genotype, which has higher fitness than the heterozygote, we see the fixation of the a allele...
+
+```{r}
+#underdominance 1
+mutation.selection(p0=0.9, w=c(.9,2), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+...and extinction when the opposite is true:
+
+```{r}
+#underdominance 2
+mutation.selection(p0=0.9, w=c(.5,.9), u=0.001, time=100, show="q", pause=0,
+                   ylim=c(0,1))
+```
+
+# Problem 3.10
+
+*Follow the exact and approximate frequencies of the $A_2$ allele for two generations when the initial frequency of $A_2$ is zero and $u = 10^{-5}$. What is the relative error introduced by the approximation $\Delta_u p \approx -u$?*
+
+The exact value of the frequency of the $A_2$ allele is...:
+
+$$ \Delta_u p = -up $$
+$$ \Delta_u p = -(10^{-5})*1 $$
+$$ p_1 = 0.99999 $$
+...after the first generation. After the second generation:
+$$ \Delta_u p = -(10^{-5})*0.99999 $$
+$$ p_2 = 0.9999800001 $$
+
+
+The approximate value of the frequency of the $A_2$ allele is...:
+
+$$ \Delta_u p \approx -u $$
+$$ p_1 = 0.99999 $$
+
+...after the first generation. After the second generation:
+
+$$ p_2 = 0.99998 $$
+Relative error is calculated as follows:
+
+$$ \frac{\textrm{Exact value - approximate value}}{\textrm{Exact value}} $$
+
+$$ \frac{0.9999800001 - 0.99998}{0.9999800001} = 1.00002*10^{-10} $$
+
+The relative error is therefore extremely small for this approximation

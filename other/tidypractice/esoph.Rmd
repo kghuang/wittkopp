@@ -1,0 +1,70 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyverse)
+library(gridExtra)
+```
+
+
+```{r}
+df_esoph <- esoph
+
+#rename columns, get rid of number of controls
+
+df_esoph <- df_esoph %>%
+  select(!ncontrols) %>%
+  rename(
+    age = agegp,
+    alc_consumed = alcgp,
+    tbc_consumed = tobgp,
+    cases = ncases
+  )
+
+#generate bar graphs
+
+age_alc_bar <- ggplot(df_esoph, aes(fill = alc_consumed, y=cases, x=age)) + 
+  geom_bar(position="dodge", stat="identity")
+
+age_tbc_bar <- ggplot(df_esoph, aes(fill = tbc_consumed, y=cases, x=age)) +
+  geom_bar(position="dodge", stat="identity")
+
+alc_age_bar <-ggplot(df_esoph, aes(fill = age, y=cases, x=alc_consumed)) + 
+  geom_bar(position="dodge", stat="identity")
+
+tbc_age_bar <-ggplot(df_esoph, aes(fill = age, y=cases, x=tbc_consumed)) +
+  geom_bar(position="dodge", stat="identity")
+
+#generate combined graphs
+
+combined_graphs <- grid.arrange(age_alc_bar, age_tbc_bar, alc_age_bar, tbc_age_bar, nrow = 2, ncol = 2)
+```
+
+```{r}
+alc_line_plot <- df_esoph %>%
+  group_by(age, alc_consumed) %>%
+  summarise(avg_cases = mean(cases), sd_cases = sd(cases)) %>%
+  ggplot(aes(x=alc_consumed, y=avg_cases, group=age, color=age)) +
+  geom_line() +
+  geom_point(shape=21, color="black", fill="#69b3a2", size=2) +
+  geom_errorbar(aes(ymin=avg_cases-sd_cases, ymax=avg_cases+sd_cases, width=.2)) +
+  ggtitle("Number of Esophogeal Cancer cases by daily \n alcohol consumption") +
+  xlab("Alcohol Consumption (g/day)") + ylab("Cases")
+
+tbc_line_plot <- df_esoph %>%
+  group_by(age, tbc_consumed) %>%
+  summarise(avg_cases = mean(cases), sd_cases = sd(cases)) %>%
+  ggplot(aes(x=tbc_consumed, y=avg_cases, group=age, color=age)) +
+  geom_line() +
+  geom_point(shape=21, color="black", fill="#69b3a2", size=2) +
+  geom_errorbar(aes(ymin=avg_cases-sd_cases, ymax=avg_cases+sd_cases, width=.2)) +
+  ggtitle("Number of Esophogeal Cancer cases by daily \n tobacco consumption") +
+  xlab("Tobacco Consumption (g/day)") + ylab("Cases")
+
+alc_line_plot
+tbc_line_plot
+```
+

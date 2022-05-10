@@ -1,0 +1,43 @@
+---
+title: "practice"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+#View(iris)
+#df <- iris
+
+select(df, Species, Sepal.Length, Petal.Length)
+filter(df, Species == "versicolor")
+```
+
+```{r}
+df_versi_length <- df %>%
+  filter(Species == "versicolor") %>%
+  select(Species, Sepal.Length, Petal.Length)
+
+View(df_versi_length)
+```
+
+```{r}
+df_versi_length %>%
+  mutate(sep_pet_ratio = Sepal.Length / Petal.Length)%>%
+  head
+
+```
+```{r}
+df %>%
+  group_by(Species) %>%
+  summarize(mean_petal_length = mean(Petal.Length, na.rm = TRUE), min_petal_length = min(Petal.Length, na.rm = TRUE), max_petal_length = max(Petal.Length, na.rm = TRUE)) %>%
+  head
+```
+
+
